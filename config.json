@@ -1,0 +1,12 @@
+{
+    "starting_money": 10000,
+
+    "tickers": [
+        "AAPL",
+        "MSFT",
+        "NVDA",
+        "SPY"
+    ],
+
+    "period": "1y"
+}
