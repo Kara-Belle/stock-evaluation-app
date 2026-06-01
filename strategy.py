@@ -6,11 +6,22 @@ def get_signal(data):
     ma50 = latest["MA50"]
     ma200 = latest["MA200"]
 
-    if price > ma50 and ma50 > ma200:
-        return "BUY"
+    score = 0
 
-    elif price < ma50:
-        return "SELL"
+    if price > ma50:
+        score += 1
 
+    if ma50 > ma200:
+        score += 1
+
+    if price > ma200:
+        score += 1
+
+    if score == 3:
+        signal = "BUY"
+    elif score == 2:
+        signal = "HOLD"
     else:
-        return "HOLD"
+        signal = "SELL"
+
+    return signal, score

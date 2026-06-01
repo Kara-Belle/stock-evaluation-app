@@ -3,29 +3,59 @@ import json
 from data_fetcher import get_stock_data
 from indicators import add_indicators
 from strategy import get_signal
-from portfolio import calculate_portfolio
+from portfolio import allocate_money
 
 with open("config.json", "r") as file:
     config = json.load(file)
 
-ticker = config["tickers"][0]
+tickers = config["tickers"]
 period = config["period"]
+
+results = []
+
+for ticker in tickers:
+
+    data = get_stock_data(ticker, period)
+    data = add_indicators(data)
+
+    signal, score = get_signal(data)
+
+    latest = data.iloc[-1]
+
+    results.append({
+        "ticker": ticker,
+        "price": latest["Close"],
+        "signal": signal,
+        "score": score
+    })
+
+results.sort(
+    key=lambda stock: stock["score"],
+    reverse=True
+)
+
+print("\n=== STOCK RANKINGS ===\n")
+
+for stock in results:
+
+    print(
+        f"{stock['ticker']:5} | "
+        f"Score: {stock['score']} | "
+        f"Signal: {stock['signal']} | "
+        f"Price: ${stock['price']:.2f}"
+    )
+
 starting_money = config["starting_money"]
 
-data = get_stock_data(ticker, period)
-data = add_indicators(data)
+portfolio = allocate_money(results, starting_money)
 
-signal = get_signal(data)
-latest = data.iloc[-1]
+print("\n=== PORTFOLIO ALLOCATION ===\n")
+print(f"Starting Money: ${starting_money:,.2f}\n")
 
-shares, cash = calculate_portfolio(starting_money, latest["Close"])
-
-print("\nStock:", ticker)
-print(f"Current Price: ${latest['Close']:.2f}")
-print(f"50 Day Average: ${latest['MA50']:.2f}")
-print(f"200 Day Average: ${latest['MA200']:.2f}")
-print(f"Signal: {signal}")
-
-print(f"\nStarting Money: ${starting_money:,.2f}")
-print(f"Shares Purchased: {shares}")
-print(f"Cash Remaining: ${cash:.2f}")
+for stock in portfolio:
+    print(
+        f"{stock['ticker']:5} | "
+        f"Shares: {stock['shares']} | "
+        f"Spent: ${stock['amount_spent']:,.2f} | "
+        f"Cash Left: ${stock['cash_left']:.2f}"
+    )
